@@ -28,6 +28,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".CameraActivity"/>
+        <activity android:name=".navigation.AddPhotoActivity"/>
         <activity android:name=".MainActivity"/>
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
