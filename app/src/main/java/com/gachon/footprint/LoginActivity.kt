@@ -41,14 +41,27 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
         auth = FirebaseAuth.getInstance()
+        if (auth?.currentUser != null) {
+            moveMainPage(auth?.currentUser)
+            return
+        }
         email_login_button.setOnClickListener {
-            createEmail()
-            //loginEmail() 나중에 loginEmail()로 체인지
+            if (validateEmail()) loginEmail()
         }
 
         account_login_button.setOnClickListener {
-            // 액티비티 팝업 창이 뜬다.
-            // 다른 레이아웃으로 넘어간다.
+            if (validateEmail()) createEmail()
+        }
+        find_password_button.setOnClickListener {
+            val email = email_edittext.text.toString().trim()
+            if (email.isEmpty()) {
+                Toast.makeText(this, "이메일을 입력해 주세요", Toast.LENGTH_SHORT).show()
+            } else {
+                auth?.sendPasswordResetEmail(email)?.addOnCompleteListener { task ->
+                    val message = if (task.isSuccessful) "비밀번호 재설정 메일을 보냈습니다" else task.exception?.localizedMessage
+                    Toast.makeText(this, message ?: "요청에 실패했습니다", Toast.LENGTH_LONG).show()
+                }
+            }
         }
 
         var gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -227,7 +240,7 @@ class LoginActivity : AppCompatActivity() {
                 moveMainPage(it.result?.user)
             } else {
                 //인증 실패시
-                Toast.makeText(this, "인증실패", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, it.exception?.localizedMessage ?: "인증실패", Toast.LENGTH_LONG).show()
 
             }
         }
@@ -236,6 +249,15 @@ class LoginActivity : AppCompatActivity() {
     private fun moveMainPage(user: FirebaseUser?) {
         if (user != null) {
             startActivity(Intent(this, MainActivity::class.java))
+            finish()
         }
+    }
+
+    private fun validateEmail(): Boolean {
+        if (email_edittext.text.isNullOrBlank() || password_edittext.text.isNullOrBlank()) {
+            Toast.makeText(this, "이메일과 비밀번호를 입력해 주세요", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        return true
     }
 }
